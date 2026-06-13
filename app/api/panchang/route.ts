@@ -131,18 +131,22 @@ export async function POST(req: NextRequest) {
 
     // Baana, Bhadra and Vidal Yoga come straight from DrikPanchang (Muscat) so they
     // match the source exactly. Cached 24h; falls back to [] if the fetch fails.
+    // Only trust the scrape when it clearly succeeded; otherwise keep computePanchang's own
+    // baana/bhadra/etc. so a blocked/failed fetch (common on serverless IPs) doesn't wipe them.
     const drik = await fetchDrikInauspicious(sunrise, nextSunriseDate);
-    data.muhurta.baana      = drik.baana;
-    data.muhurta.bhadra     = drik.bhadra;
-    data.muhurta.vidalYoga  = drik.vidalYoga;
-    data.muhurta.varjyam    = drik.varjyam;
-    data.muhurta.durMuhurta = drik.durMuhurta;
-    data.muhurta.amritKalam = drik.amritKalam;
+    if (drik.ok) {
+      data.muhurta.baana      = drik.baana;
+      data.muhurta.bhadra     = drik.bhadra;
+      data.muhurta.vidalYoga  = drik.vidalYoga;
+      data.muhurta.varjyam    = drik.varjyam;
+      data.muhurta.durMuhurta = drik.durMuhurta;
+      data.muhurta.amritKalam = drik.amritKalam;
+    }
 
-    // Special yogas (Ravi/Sarvartha Siddhi/Amrita Siddhi/Dwipushkar/Tripushkar) from DrikPanchang.
-    const specialYogas = Object.fromEntries(
-      Object.entries(drik.specialYogas).map(([k, ivs]) => [k, ivs.map(serializeInterval)])
-    );
+    // Special yogas come only from DrikPanchang (no computed fallback) → empty when the scrape failed.
+    const specialYogas = drik.ok
+      ? Object.fromEntries(Object.entries(drik.specialYogas).map(([k, ivs]) => [k, ivs.map(serializeInterval)]))
+      : { raviYoga: [], sarvarthaSiddhi: [], amritaSiddhi: [], dwipushkar: [], tripushkar: [], guruPushya: [], raviPushya: [] };
 
     const prevMuhurtaSer = serializeMuhurta(prevData.muhurta);
 

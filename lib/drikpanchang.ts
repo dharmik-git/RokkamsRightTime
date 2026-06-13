@@ -266,7 +266,7 @@ export interface DrikSpecialYogas {
 export async function fetchDrikInauspicious(
   sunrise: Date,
   nextSunrise: Date
-): Promise<{ baana: TimeInterval[]; bhadra: TimeInterval[]; vidalYoga: TimeInterval[]; varjyam: TimeInterval[]; durMuhurta: TimeInterval[]; amritKalam: TimeInterval[]; specialYogas: DrikSpecialYogas }> {
+): Promise<{ ok: boolean; baana: TimeInterval[]; bhadra: TimeInterval[]; vidalYoga: TimeInterval[]; varjyam: TimeInterval[]; durMuhurta: TimeInterval[]; amritKalam: TimeInterval[]; specialYogas: DrikSpecialYogas }> {
   // Format the panchang date as DD/MM/YYYY in Muscat local time
   const localDate = new Date(sunrise.getTime() + TZ_HOURS * 3600000);
   const dd = localDate.getUTCDate().toString().padStart(2, '0');
@@ -281,7 +281,7 @@ export async function fetchDrikInauspicious(
   );
 
   const emptySpecial: DrikSpecialYogas = { raviYoga: [], sarvarthaSiddhi: [], amritaSiddhi: [], dwipushkar: [], tripushkar: [], guruPushya: [], raviPushya: [] };
-  const empty = { baana: [], bhadra: [], vidalYoga: [], varjyam: [], durMuhurta: [], amritKalam: [], specialYogas: emptySpecial };
+  const empty = { ok: false, baana: [], bhadra: [], vidalYoga: [], varjyam: [], durMuhurta: [], amritKalam: [], specialYogas: emptySpecial };
 
   try {
     const res = await fetch(
@@ -293,10 +293,13 @@ export async function fetchDrikInauspicious(
     );
     if (!res.ok) return empty;
     const html = await res.text();
+    // Guard against blocked/captcha pages that return 200 but lack the panchang table.
+    if (!/dpTableKey/.test(html) || !/Inauspicious Timings/i.test(html)) return empty;
     const values = extractAllValues(html);
     const v = (label: string) => values.get(label) ?? [];
 
     return {
+      ok: true,
       baana:      parseBaana(v('Baana'), sunrise, nextSunrise, localMidnight),
       bhadra:     parseRange(v('Bhadra'), sunrise, nextSunrise, localMidnight),
       vidalYoga:  parseRange(v('Vidaal Yoga'), sunrise, nextSunrise, localMidnight),
