@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import ExpandSection from '@/components/ui/ExpandSection';
+import InfoDot from '@/components/ui/InfoDot';
 import DateTag from '@/components/ui/DateTag';
 import { formatTime, getPageDayEndMs } from '@/lib/formatTime';
 import { computeCategorySlots, type CategoryDef, type CategorySlot } from '@/lib/categoryScore';
@@ -35,6 +36,28 @@ function StarDisplay({ count, size = '1rem' }: { count: number; size?: string })
 
 function rankClass(i: number) { return i < 3 ? `rank-${i + 1}` : 'rank-n'; }
 
+function StarLegend() {
+  const rows = [
+    { count: 5,   label: 'Excellent', range: '95+' },
+    { count: 4.5, label: 'Very Good', range: '85–94' },
+    { count: 4,   label: 'Good',      range: '75–84' },
+    { count: 3,   label: 'Average',   range: '65–74' },
+    { count: 2,   label: 'Below Avg', range: '50–64' },
+    { count: 1,   label: 'Poor',      range: '<50' },
+  ];
+  return (
+    <div style={{ lineHeight: 1.9 }}>
+      {rows.map(r => (
+        <div key={r.label} style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+          <StarDisplay count={r.count} size="0.7rem" />
+          <span style={{ color: 'var(--moonsilver)', fontSize: '0.78rem', flex: 1 }}>{r.label}</span>
+          <span style={{ color: 'var(--moonsilver-dim)', fontSize: '0.68rem' }}>{r.range}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // Combine the day's muhurta with the previous day's early-morning overflow so
 // pre-sunrise windows see the right dosha/auspicious intervals.
 function mergeMuhurta(muhurta: Record<string, any>, early?: Record<string, any>): Record<string, any> {
@@ -47,6 +70,27 @@ function mergeMuhurta(muhurta: Record<string, any>, early?: Record<string, any>)
     out[k] = [...a, ...b];
   }
   return out;
+}
+
+// A group (Special Yogas / Muhurtas / Doshas) framed by a top divider + label.
+function Group({ label, color, children }: { label: string; color: string; children: React.ReactNode }) {
+  const items = Array.isArray(children) ? children : [children];
+  const hasItems = items.some(Boolean);
+  return (
+    <div style={{ borderTop: '1px solid var(--night-border)', marginTop: '0.35rem', paddingTop: '0.28rem' }}>
+      <div style={{ color: 'var(--moonsilver-dim)', fontFamily: 'Cinzel, serif', fontSize: '0.62rem', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '0.15rem' }}>{label}</div>
+      {hasItems ? children : <span style={{ color: 'var(--moonsilver-dim)', fontSize: '0.7rem', fontStyle: 'italic' }}>None</span>}
+    </div>
+  );
+}
+
+function GroupRow({ left, right, color }: { left: string; right: string; color: string }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
+      <span style={{ color, fontFamily: 'Cinzel, serif', fontSize: '0.68rem' }}>{left}</span>
+      <span style={{ color, fontFamily: 'Cinzel, serif', fontWeight: 700 }}>{right}</span>
+    </div>
+  );
 }
 
 function Breakdown({ slot, rank }: { slot: CategorySlot; rank: number }) {
@@ -66,22 +110,21 @@ function Breakdown({ slot, rank }: { slot: CategorySlot; rank: number }) {
           <span style={{ color: 'var(--gold-light)', fontFamily: 'Cinzel, serif', fontWeight: 700, flexShrink: 0 }}>{r.score}</span>
         </div>
       ))}
-      {slot.bonuses.length > 0 && (
-        <div style={{ borderTop: '1px solid var(--night-border)', marginTop: '0.35rem', paddingTop: '0.28rem' }}>
-          {slot.bonuses.map((b, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
-              <span style={{ color: 'var(--auspicious-text)', fontFamily: 'Cinzel, serif', fontSize: '0.68rem' }}>✦ {b.label}</span>
-              <span style={{ color: 'var(--auspicious-text)', fontFamily: 'Cinzel, serif', fontWeight: 700 }}>+{b.points}</span>
-            </div>
-          ))}
-        </div>
-      )}
-      {slot.multLabels.length > 0 && (
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', marginTop: '0.2rem' }}>
-          <span style={{ color: 'var(--inauspicious-text)', fontFamily: 'Cinzel, serif', fontSize: '0.68rem' }}>✗ {slot.multLabels.join(', ')}</span>
-          <span style={{ color: 'var(--inauspicious-text)', fontFamily: 'Cinzel, serif', fontWeight: 700 }}>×{slot.multiplier}</span>
-        </div>
-      )}
+      <Group label="Special Yogas" color="var(--auspicious-text)">
+        {slot.specialYogaBonuses.map((b, i) => (
+          <GroupRow key={i} color="var(--auspicious-text)" left={`✦ ${b.label}`} right={`+${b.points}`} />
+        ))}
+      </Group>
+      <Group label="Muhurtas" color="var(--auspicious-text)">
+        {slot.muhurtaBonuses.map((b, i) => (
+          <GroupRow key={i} color="var(--auspicious-text)" left={`✦ ${b.label}`} right={`+${b.points}`} />
+        ))}
+      </Group>
+      <Group label="Doshas" color="var(--inauspicious-text)">
+        {slot.doshas.map((d, i) => (
+          <GroupRow key={i} color="var(--inauspicious-text)" left={`✗ ${d.label}`} right={`×${d.mult}`} />
+        ))}
+      </Group>
       <div style={{ borderTop: '1px solid var(--night-border)', marginTop: '0.35rem', paddingTop: '0.28rem', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <span style={{ color: 'var(--moonsilver-dim)', fontFamily: 'Cinzel, serif', fontSize: '0.68rem' }}>Base (weighted)</span>
         <span style={{ color: 'var(--gold-light)', fontFamily: 'Cinzel, serif', fontSize: '0.78rem', fontWeight: 600 }}>{slot.baseScore}</span>
@@ -151,8 +194,14 @@ export default function CategoryResult({ category, transitions, muhurta, special
     setPopup(prev => prev?.index === index ? null : { index, pos: { top, left } });
   }
 
+  const legend = (
+    <span onClick={e => e.stopPropagation()}>
+      <InfoDot title="" brief="" briefNode={<StarLegend />} descriptionOnly label="?" />
+    </span>
+  );
+
   return (
-    <ExpandSection title={category.label} accentColor="var(--gold-light)">
+    <ExpandSection title={`Result - ${category.label}`} accentColor="var(--gold-light)" titleExtra={legend}>
       {slots.length === 0 ? (
         <p style={{ color: 'var(--moonsilver-dim)', fontStyle: 'italic', fontSize: '0.88rem' }}>No qualifying windows today.</p>
       ) : (

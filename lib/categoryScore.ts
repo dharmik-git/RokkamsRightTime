@@ -31,6 +31,7 @@ const SOFT_MULT = 0.9;
 
 export interface ScoreElementRow { label: string; name: string; score: number; weighted: number }
 export interface BonusRow { label: string; points: number }
+export interface DoshaRow { label: string; mult: number }
 
 export interface CategorySlot {
   start: number;
@@ -40,8 +41,9 @@ export interface CategorySlot {
   bonusTotal: number;
   multiplier: number;
   elements: ScoreElementRow[];
-  bonuses: BonusRow[];
-  multLabels: string[];
+  specialYogaBonuses: BonusRow[];
+  muhurtaBonuses: BonusRow[];
+  doshas: DoshaRow[];
   starCount: number;
 }
 
@@ -146,24 +148,25 @@ export function computeCategorySlots({
     ];
     const baseScore = elements.reduce((a, r) => a + r.weighted, 0);
 
-    // Additive bonuses from overlapping auspicious muhurtas + special yogas.
-    const bonuses: BonusRow[] = [];
-    for (const k of BONUS_MUHURTA_KEYS) {
-      const info = MUHURTA_INFO[k];
-      if (info?.bonus && overlapsAt(muhurta, k, mid)) bonuses.push({ label: info.name, points: info.bonus });
-    }
+    // Additive bonuses from overlapping special yogas + auspicious muhurtas (all summed).
+    const specialYogaBonuses: BonusRow[] = [];
     for (const k of SPECIAL_YOGA_KEYS) {
       const info = SPECIAL_YOGA_INFO[k];
-      if (info?.bonus && overlapsAt(specialYogas, k, mid)) bonuses.push({ label: info.name, points: info.bonus });
+      if (info?.bonus && overlapsAt(specialYogas, k, mid)) specialYogaBonuses.push({ label: info.name, points: info.bonus });
     }
-    const bonusTotal = bonuses.reduce((a, b) => a + b.points, 0);
+    const muhurtaBonuses: BonusRow[] = [];
+    for (const k of BONUS_MUHURTA_KEYS) {
+      const info = MUHURTA_INFO[k];
+      if (info?.bonus && overlapsAt(muhurta, k, mid)) muhurtaBonuses.push({ label: info.name, points: info.bonus });
+    }
+    const bonusTotal = [...specialYogaBonuses, ...muhurtaBonuses].reduce((a, b) => a + b.points, 0);
 
-    // Soft multiplier (Baana / Vidal Yoga) — applied once if either overlaps.
-    const multLabels: string[] = [];
+    // Soft multiplier (Baana / Vidal Yoga) — multiplicative per overlap (both → 0.81).
+    const doshas: DoshaRow[] = [];
     for (const k of SOFT_MULT_DOSHAS) {
-      if (overlapsAt(muhurta, k, mid)) multLabels.push(MUHURTA_INFO[k]?.name ?? k);
+      if (overlapsAt(muhurta, k, mid)) doshas.push({ label: MUHURTA_INFO[k]?.name ?? k, mult: SOFT_MULT });
     }
-    const multiplier = multLabels.length > 0 ? SOFT_MULT : 1;
+    const multiplier = doshas.reduce((m, d) => m * d.mult, 1);
 
     const finalScore = (baseScore + bonusTotal) * multiplier;
 
@@ -174,8 +177,9 @@ export function computeCategorySlots({
       bonusTotal,
       multiplier,
       elements,
-      bonuses,
-      multLabels,
+      specialYogaBonuses,
+      muhurtaBonuses,
+      doshas,
       starCount: starCount(finalScore),
     });
   }
