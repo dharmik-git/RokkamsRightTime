@@ -82,7 +82,8 @@ function mergeAdjacent(ivs: Interval[]): Interval[] {
     const gap = new Date(sorted[i].start).getTime() - new Date(prev.end).getTime();
     // Only merge if same label (or both unlabeled) — prevents Mrityu+Agni Baana from collapsing
     if (gap <= 120_000 && sorted[i].label === prev.label) {
-      merged[merged.length - 1] = { ...prev, end: sorted[i].end };
+      const end = new Date(sorted[i].end).getTime() > new Date(prev.end).getTime() ? sorted[i].end : prev.end;
+      merged[merged.length - 1] = { ...prev, end };
     } else {
       merged.push(sorted[i]);
     }

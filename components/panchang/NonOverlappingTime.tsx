@@ -107,7 +107,8 @@ function mergeAdjacent(ivs: Interval[]): Interval[] {
     const prev = merged[merged.length - 1];
     const gap = new Date(sorted[i].start).getTime() - new Date(prev.end).getTime();
     if (gap <= 120_000) {
-      merged[merged.length - 1] = { ...prev, end: sorted[i].end };
+      const end = new Date(sorted[i].end).getTime() > new Date(prev.end).getTime() ? sorted[i].end : prev.end;
+      merged[merged.length - 1] = { ...prev, end };
     } else {
       merged.push(sorted[i]);
     }
