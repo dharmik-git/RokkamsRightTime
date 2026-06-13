@@ -111,7 +111,7 @@ function Breakdown({ slot, rank }: { slot: CategorySlot; rank: number }) {
         </div>
       ))}
       <div style={{ borderTop: '1px solid var(--night-border)', marginTop: '0.35rem', paddingTop: '0.28rem', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <span style={{ color: 'var(--moonsilver-dim)', fontFamily: 'Cinzel, serif', fontSize: '0.68rem' }}>Base (weighted)</span>
+        <span style={{ color: 'var(--moonsilver-dim)', fontFamily: 'Cinzel, serif', fontSize: '0.68rem' }}>Base Score</span>
         <span style={{ color: 'var(--gold-light)', fontFamily: 'Cinzel, serif', fontSize: '0.78rem', fontWeight: 600 }}>{slot.baseScore}</span>
       </div>
       <Group label="Special Yogas" color="var(--auspicious-text)">
