@@ -7,7 +7,8 @@ import AuspiciousTime from '@/components/panchang/AuspiciousTime';
 import InauspiciousTime from '@/components/panchang/InauspiciousTime';
 import NonOverlappingTime from '@/components/panchang/NonOverlappingTime';
 import RankingTime from '@/components/panchang/RankingTime';
-import ResultSection from '@/components/panchang/ResultSection';
+import CategoryResult from '@/components/panchang/CategoryResult';
+import { CATEGORIES } from '@/lib/categoryScore';
 import { getMuscatToday, digitRoot } from '@/lib/formatTime';
 
 function StarDivider() {
@@ -86,15 +87,19 @@ export default function Home() {
             <InauspiciousTime muhurta={data.muhurta} pageDate={dateStr} earlyMorningMuhurta={data.earlyMorningMuhurta} />
             <NonOverlappingTime muhurta={data.muhurta} pageDate={dateStr} earlyMorningMuhurta={data.earlyMorningMuhurta} />
             <RankingTime muhurta={data.muhurta} panchangData={data} pageDate={dateStr} />
-            <ResultSection
-              muhurta={data.muhurta}
-              transitions={data.transitions}
-              vara={data.vara}
-              paksha={data.paksha}
-              pageDate={dateStr}
-              nextSunrise={data.sunMoonTimes.nextSunrise}
-              earlyMorningSlots={data.earlyMorningSlots ?? []}
-            />
+            {CATEGORIES.map(cat => (
+              <CategoryResult
+                key={cat.key}
+                category={cat}
+                transitions={data.transitions}
+                muhurta={data.muhurta}
+                specialYogas={data.specialYogas}
+                varaName={data.vara.name}
+                paksha={data.paksha}
+                pageDate={dateStr}
+                earlyMorningMuhurta={data.earlyMorningMuhurta}
+              />
+            ))}
 
             <div style={{ textAlign: 'center', padding: '1.5rem 0 0.5rem', borderTop: '1px solid var(--night-border)', marginTop: '0.5rem' }}>
               <p style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(0.62rem, 1.6vw, 0.72rem)', color: 'var(--moonsilver-dim)', letterSpacing: '0.1em', textTransform: 'uppercase', lineHeight: 2 }}>
