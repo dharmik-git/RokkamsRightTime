@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import ExpandSection from '@/components/ui/ExpandSection';
 import InfoDot from '@/components/ui/InfoDot';
+import { MiniPopup } from '@/components/ui/PopupContent';
 import DateTag from '@/components/ui/DateTag';
 import { formatTime, getPageDayEndMs } from '@/lib/formatTime';
 import { computeCategorySlots, type CategoryDef, type CategorySlot } from '@/lib/categoryScore';
@@ -72,6 +73,18 @@ function mergeMuhurta(muhurta: Record<string, any>, early?: Record<string, any>)
   return out;
 }
 
+// A name that opens its description (max ~3 lines) on click. Plain text if no description.
+function NameLink({ text, description, color }: { text: string; description?: string; color?: string }) {
+  if (!description) return <span style={{ color }}>{text}</span>;
+  return (
+    <MiniPopup
+      width={320}
+      body={description}
+      trigger={<span style={{ color, borderBottom: '1px dotted var(--gold-dim)', cursor: 'pointer' }}>{text}</span>}
+    />
+  );
+}
+
 // A group (Special Yogas / Muhurtas / Doshas) framed by a top divider + label.
 function Group({ label, color, children }: { label: string; color: string; children: React.ReactNode }) {
   const items = Array.isArray(children) ? children : [children];
@@ -84,10 +97,10 @@ function Group({ label, color, children }: { label: string; color: string; child
   );
 }
 
-function GroupRow({ left, right, color }: { left: string; right: string; color: string }) {
+function GroupRow({ prefix, name, description, right, color }: { prefix: string; name: string; description?: string; right: string; color: string }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
-      <span style={{ color, fontFamily: 'Cinzel, serif', fontSize: '0.68rem' }}>{left}</span>
+      <span style={{ color, fontFamily: 'Cinzel, serif', fontSize: '0.68rem' }}>{prefix}<NameLink text={name} description={description} color={color} /></span>
       <span style={{ color, fontFamily: 'Cinzel, serif', fontWeight: 700 }}>{right}</span>
     </div>
   );
@@ -106,7 +119,7 @@ function Breakdown({ slot, rank }: { slot: CategorySlot; rank: number }) {
       {slot.elements.map(r => (
         <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '0.1rem' }}>
           <span style={{ color: 'var(--moonsilver-dim)', fontFamily: 'Cinzel, serif', fontSize: '0.68rem', width: 64, flexShrink: 0 }}>{r.label}</span>
-          <span style={{ color: 'var(--moonsilver)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</span>
+          <span style={{ flex: 1, minWidth: 0 }}><NameLink text={r.name} description={r.description} color="var(--moonsilver)" /></span>
           <span style={{ color: 'var(--gold-light)', fontFamily: 'Cinzel, serif', fontWeight: 700, flexShrink: 0 }}>{r.score}</span>
         </div>
       ))}
@@ -116,17 +129,17 @@ function Breakdown({ slot, rank }: { slot: CategorySlot; rank: number }) {
       </div>
       <Group label="Special Yogas" color="var(--auspicious-text)">
         {slot.specialYogaBonuses.map((b, i) => (
-          <GroupRow key={i} color="var(--auspicious-text)" left={`✦ ${b.label}`} right={`+${b.points}`} />
+          <GroupRow key={i} color="var(--auspicious-text)" prefix="✦ " name={b.label} description={b.description} right={`+${b.points}`} />
         ))}
       </Group>
       <Group label="Muhurtas" color="var(--auspicious-text)">
         {slot.muhurtaBonuses.map((b, i) => (
-          <GroupRow key={i} color="var(--auspicious-text)" left={`✦ ${b.label}`} right={`+${b.points}`} />
+          <GroupRow key={i} color="var(--auspicious-text)" prefix="✦ " name={b.label} description={b.description} right={`+${b.points}`} />
         ))}
       </Group>
       <Group label="Doshas" color="var(--inauspicious-text)">
         {slot.doshas.map((d, i) => (
-          <GroupRow key={i} color="var(--inauspicious-text)" left={`✗ ${d.label}`} right={`×${d.mult}`} />
+          <GroupRow key={i} color="var(--inauspicious-text)" prefix="✗ " name={d.label} description={d.description} right={`×${d.mult}`} />
         ))}
       </Group>
     </div>

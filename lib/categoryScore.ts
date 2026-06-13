@@ -29,9 +29,9 @@ const HARD_EXCLUDE_DOSHAS = ['rahuKalam', 'yamaGanda', 'gulikaKalam', 'varjyam',
 const SOFT_MULT_DOSHAS = ['baana', 'vidalYoga'];
 const SOFT_MULT = 0.9;
 
-export interface ScoreElementRow { label: string; name: string; score: number; weighted: number }
-export interface BonusRow { label: string; points: number }
-export interface DoshaRow { label: string; mult: number }
+export interface ScoreElementRow { label: string; name: string; score: number; weighted: number; description: string }
+export interface BonusRow { label: string; points: number; description: string }
+export interface DoshaRow { label: string; mult: number; description: string }
 
 export interface CategorySlot {
   start: number;
@@ -133,18 +133,22 @@ export function computeCategorySlots({
     const kSlot = activeAt(transitions.karana, mid);
     if (!tSlot || !nSlot || !ySlot || !kSlot) continue;
 
+    const nEl = NAKSHATRAS[nSlot.name!];
     const tEl = TITHIS[`${tSlot.paksha ?? paksha} ${tSlot.name}`] ?? TITHIS[tSlot.name!];
-    const nScore = scoreOf(NAKSHATRAS[nSlot.name!], field);
+    const yEl = YOGAS[ySlot.name!];
+    const kEl = KARANAS[kSlot.name!];
+    const vEl = VARAS[varaName];
+    const nScore = scoreOf(nEl, field);
     const tScore = scoreOf(tEl, field);
-    const yScore = scoreOf(YOGAS[ySlot.name!], field);
-    const kScore = scoreOf(KARANAS[kSlot.name!], field);
+    const yScore = scoreOf(yEl, field);
+    const kScore = scoreOf(kEl, field);
 
     const elements: ScoreElementRow[] = [
-      { label: 'Nakshatra', name: nSlot.name!, score: nScore, weighted: nScore * weights.nak / 100 },
-      { label: 'Tithi',     name: tSlot.name!, score: tScore, weighted: tScore * weights.tit / 100 },
-      { label: 'Yoga',      name: ySlot.name!, score: yScore, weighted: yScore * weights.yog / 100 },
-      { label: 'Karana',    name: kSlot.name!, score: kScore, weighted: kScore * weights.kar / 100 },
-      { label: 'Vara',      name: varaName,    score: varScore, weighted: varScore * weights.var / 100 },
+      { label: 'Nakshatra', name: nSlot.name!, score: nScore, weighted: nScore * weights.nak / 100, description: nEl?.significance ?? '' },
+      { label: 'Tithi',     name: tSlot.name!, score: tScore, weighted: tScore * weights.tit / 100, description: tEl?.significance ?? '' },
+      { label: 'Yoga',      name: ySlot.name!, score: yScore, weighted: yScore * weights.yog / 100, description: yEl?.significance ?? '' },
+      { label: 'Karana',    name: kSlot.name!, score: kScore, weighted: kScore * weights.kar / 100, description: kEl?.significance ?? '' },
+      { label: 'Vara',      name: varaName,    score: varScore, weighted: varScore * weights.var / 100, description: vEl?.significance ?? '' },
     ];
     const baseScore = elements.reduce((a, r) => a + r.weighted, 0);
 
@@ -152,19 +156,19 @@ export function computeCategorySlots({
     const specialYogaBonuses: BonusRow[] = [];
     for (const k of SPECIAL_YOGA_KEYS) {
       const info = SPECIAL_YOGA_INFO[k];
-      if (info?.bonus && overlapsAt(specialYogas, k, mid)) specialYogaBonuses.push({ label: info.name, points: info.bonus });
+      if (info?.bonus && overlapsAt(specialYogas, k, mid)) specialYogaBonuses.push({ label: info.name, points: info.bonus, description: info.reason });
     }
     const muhurtaBonuses: BonusRow[] = [];
     for (const k of BONUS_MUHURTA_KEYS) {
       const info = MUHURTA_INFO[k];
-      if (info?.bonus && overlapsAt(muhurta, k, mid)) muhurtaBonuses.push({ label: info.name, points: info.bonus });
+      if (info?.bonus && overlapsAt(muhurta, k, mid)) muhurtaBonuses.push({ label: info.name, points: info.bonus, description: info.reason });
     }
     const bonusTotal = [...specialYogaBonuses, ...muhurtaBonuses].reduce((a, b) => a + b.points, 0);
 
     // Soft multiplier (Baana / Vidal Yoga) — multiplicative per overlap (both → 0.81).
     const doshas: DoshaRow[] = [];
     for (const k of SOFT_MULT_DOSHAS) {
-      if (overlapsAt(muhurta, k, mid)) doshas.push({ label: MUHURTA_INFO[k]?.name ?? k, mult: SOFT_MULT });
+      if (overlapsAt(muhurta, k, mid)) doshas.push({ label: MUHURTA_INFO[k]?.name ?? k, mult: SOFT_MULT, description: MUHURTA_INFO[k]?.reason ?? '' });
     }
     const multiplier = doshas.reduce((m, d) => m * d.mult, 1);
 
