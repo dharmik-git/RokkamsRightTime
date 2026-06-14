@@ -163,7 +163,7 @@ export const NAKSHATRAS: Record<string, ScoredElement> = {
   Shatabhisha:        S('Rahu',                'Isolation',      'Better for research and specialized activities than mainstream commercial work.',           tc('Average', 60),   tc('Average', 62),    tc('Average', 55),   tc('Average', 58),   tc('Average', 60)),
   'Purva Bhadrapada': S('Jupiter (Brihaspati)','Transformation', 'Intense and transformative, less suited for stable business activities.',                   tc('Average', 55),   tc('Average', 50),    tc('Poor', 40),      tc('Average', 55),   tc('Poor', 45)),
   'Uttara Bhadrapada':S('Saturn (Shani)',      'Stability',      'Excellent for stability, wealth preservation, long-term agreements, and endurance.',        tc('Excellent', 92), tc('Very Good', 88),  tc('Excellent', 96), tc('Very Good', 86), tc('Excellent', 95)),
-  Revati:             S('Mercury (Budha)',     'Completion',     'One of the finest Nakshatras for prosperity, successful ventures, commerce, travel, and finance.', tc('Excellent', 99), tc('Excellent', 95), tc('Excellent', 100),tc('Excellent', 99), tc('Excellent', 99)),
+  Revati:             S('Mercury (Budha)',     'Completion',     'One of the finest Nakshatras for prosperity, successful ventures, commerce, travel, and finance.', tc('Excellent', 99), tc('Excellent', 95), tc('Excellent', 98), tc('Excellent', 100),tc('Excellent', 99)),
 };
 
 // Yoga has no tag (Nature only). Some yogas have spelling variants the calculator
@@ -177,7 +177,7 @@ export const YOGAS: Record<string, ScoredElement> = {
   Dhruva:     S('', 'Permanence',     'One of the most stable and enduring Yogas for contracts, institutions, and finance.', tc('Excellent', 100), tc('Excellent', 96), tc('Excellent', 100), tc('Excellent', 98), tc('Excellent', 100)),
   Siddhi:     S('', 'Accomplishment', 'One of the best Yogas for success, accomplishment, contracts, and prosperity.',       tc('Excellent', 100), tc('Excellent', 98), tc('Excellent', 100), tc('Excellent', 99), tc('Excellent', 99)),
   Vriddhi:    S('', 'Expansion',      'Outstanding for growth, expansion, wealth creation, and business development.',        tc('Excellent', 99),  tc('Excellent', 97), tc('Excellent', 98),  tc('Excellent', 100), tc('Excellent', 99)),
-  Siddha:     S('', 'Success',        'Traditionally regarded as highly favorable for successful undertakings.',             tc('Excellent', 99),  tc('Excellent', 97), tc('Excellent', 99),  tc('Excellent', 98), tc('Excellent', 98)),
+  Siddha:     S('', 'Success',        'Traditionally regarded as highly favorable for successful undertakings.',             tc('Excellent', 99),  tc('Excellent', 97), tc('Excellent', 99),  tc('Excellent', 98), tc('Excellent', 99)),
   Sukarman:   yoga_sukarman,
   Sukarma:    yoga_sukarman,
   Shiva:      S('', 'Auspiciousness', 'Highly auspicious for stability, prosperity, and long-term success.',                  tc('Excellent', 98),  tc('Excellent', 94), tc('Excellent', 99),  tc('Excellent', 96), tc('Excellent', 98)),
